@@ -126,7 +126,6 @@
     let currentRotation = 0;
     let selectedCharacter = '';
 
-    // セグメントを生成
     outcomes.forEach((name, index) => {
       const startAngle = segmentAngle * index;
       const endAngle = startAngle + segmentAngle;
@@ -150,10 +149,9 @@
       segments.appendChild(text);
     });
 
-    // 回転処理
     button.addEventListener('click', () => {
       button.disabled = true;
-      const spin = 360 * 5 + Math.floor(Math.random() * 360); // 5回転 + ランダム角度
+      const spin = 360 * 5 + Math.floor(Math.random() * 360); 
       currentRotation += spin;
       wheel.style.transition = 'transform 3s cubic-bezier(0.25, 0.8, 0.25, 1)';
       wheel.style.transform = `rotate(${currentRotation}deg)`;
@@ -162,14 +160,13 @@
         const selectedIndex = Math.floor((360 - (currentRotation % 360)) / segmentAngle) % outcomes.length;
         selectedCharacter = outcomes[selectedIndex];
         result.textContent = `育成するキャラは「${selectedCharacter}」！`;
-        twitterButton.style.display = 'inline-block';  // Twitterボタンを表示
+        twitterButton.style.display = 'inline-block';  
         gong.currentTime = 0;
         gong.play();
         button.disabled = false;
       }, 3000);
     });
 
-    // Twitterでシェア
     twitterButton.addEventListener('click', () => {
       const tweetText = `今日の育成キャラは「${selectedCharacter}」！`;
       const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
