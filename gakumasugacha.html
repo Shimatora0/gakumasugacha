@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>ガチャルーレット</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      font-family: sans-serif;
+      background: #f5f5f5;
+      border: 2px solid #333;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      position: absolute;
+      top: 20px;
+    }
+
+    .wheel-container {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      border: 2px solid #333;
+      border-radius: 50%;
+    }
+
+    .pointer {
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%) rotate(180deg);
+      font-size: 2.5rem;
+      color: red;
+      z-index: 10;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(0deg);
+      transition: transform 3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      display: block;
+      border-radius: 50%;
+    }
+
+    path {
+      stroke: #333;
+      stroke-width: 1;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1.2rem;
+      background-color: #00c853;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 1.5rem;
+      padding: 10px;
+    }
+
+    button:disabled {
+      background-color: #aaa;
+      cursor: not-allowed;
+    }
+
+    .twitter-btn {
+      background-color: #1DA1F2;
+      color: white;
+      margin-top: 10px;
+    }
+
+    text {
+      font-size: 8px;
+      text-anchor: middle;
+      fill: white;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>誰を育成する？</h1>
+
+  <div class="wheel-container">
+    <div class="pointer">▲</div>
+    <svg id="wheel" viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r="100" fill="#e0e0e0" stroke="#333" stroke-width="2"/>
+      <g id="segments"></g>
+    </svg>
+  </div>
+
+  <button id="spinButton">この子！</button>
+  <div id="result"></div>
+
+  <button id="twitterButton" class="twitter-btn" style="display: none;">結果をTwitterにシェア</button>
+
+  <audio id="gongSound" src="教会の鐘1.mp3" preload="auto"></audio>
+
+  <script>
+    const outcomes = [
+      '花海咲季', '月村手毬', '藤田ことね', '有村麻央', '葛城リーリヤ',
+      '倉本千奈', '紫雲清夏', '篠澤広', '姫崎莉波', '花海佑芽',
+      '秦谷美鈴', '十王星南'
+    ];
+    const segmentAngle = 360 / outcomes.length;
+    const segments = document.getElementById('segments');
+    const wheel = document.getElementById('wheel');
+    const button = document.getElementById('spinButton');
+    const result = document.getElementById('result');
+    const gong = document.getElementById('gongSound');
+    const twitterButton = document.getElementById('twitterButton');
+    let currentRotation = 0;
+    let selectedCharacter = '';
+
+    // セグメントを生成
+    outcomes.forEach((name, index) => {
+      const startAngle = segmentAngle * index;
+      const endAngle = startAngle + segmentAngle;
+      const x1 = 100 + 100 * Math.cos((startAngle - 90) * (Math.PI / 180));
+      const y1 = 100 + 100 * Math.sin((startAngle - 90) * (Math.PI / 180));
+      const x2 = 100 + 100 * Math.cos((endAngle - 90) * (Math.PI / 180));
+      const y2 = 100 + 100 * Math.sin((endAngle - 90) * (Math.PI / 180));
+      const color = `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`;
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', `M100,100 L${x1},${y1} A100,100 0 0,1 ${x2},${y2} Z`);
+      path.setAttribute('fill', color);
+      segments.appendChild(path);
+
+      const textX = 100 + 70 * Math.cos(((startAngle + endAngle) / 2 - 90) * (Math.PI / 180));
+      const textY = 100 + 70 * Math.sin(((startAngle + endAngle) / 2 - 90) * (Math.PI / 180));
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', textX);
+      text.setAttribute('y', textY);
+      text.textContent = name;
+      segments.appendChild(text);
+    });
+
+    // 回転処理
+    button.addEventListener('click', () => {
+      button.disabled = true;
+      const spin = 360 * 5 + Math.floor(Math.random() * 360); // 5回転 + ランダム角度
+      currentRotation += spin;
+      wheel.style.transition = 'transform 3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+      wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+      setTimeout(() => {
+        const selectedIndex = Math.floor((360 - (currentRotation % 360)) / segmentAngle) % outcomes.length;
+        selectedCharacter = outcomes[selectedIndex];
+        result.textContent = `育成するキャラは「${selectedCharacter}」！`;
+        twitterButton.style.display = 'inline-block';  // Twitterボタンを表示
+        gong.currentTime = 0;
+        gong.play();
+        button.disabled = false;
+      }, 3000);
+    });
+
+    // Twitterでシェア
+    twitterButton.addEventListener('click', () => {
+      const tweetText = `今日の育成キャラは「${selectedCharacter}」！`;
+      const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+      window.open(tweetUrl, '_blank');
+    });
+  </script>
+</body>
+</html>
